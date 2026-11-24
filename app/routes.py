@@ -1,5 +1,6 @@
 from flask import Blueprint, abort, jsonify, request, send_file
 
+from app.audit.service import list_audits, spot_check
 from app.catalog import SPEC
 from app.config import SAMPLES
 from app.errors import DomainIssue
@@ -22,7 +23,7 @@ def catalog():
     return jsonify(code=SPEC["code"], name=SPEC["name"], actor=SPEC["actor"], rule=SPEC["rule"],
                    rule_short=SPEC["rule_short"],
                    stages=[{"id": item, "name": name} for item, name in zip(
-                       ["intake", "prepare", "calculate", "decision", "reconcile", "review", "evidence"],
+                       ["intake", "prepare", "calculate", "decision", "reconcile", "review", "evidence", "audit"],
                        SPEC["stages"])],
                    chart=SPEC["chart"], result_columns=SPEC["result_columns"],
                    columns=SPEC["columns"], samples=["dirty", "clean"])
@@ -66,6 +67,19 @@ def review(run_id):
 def evidence(run_id):
     run = serialize(store().get(run_id))
     return jsonify(render(run))
+
+
+@api.post("/api/runs/<run_id>/audit")
+def audit(run_id):
+    data = request.get_json(silent=True) or {}
+    if not isinstance(data, dict):
+        raise DomainIssue("BAD_REQUEST")
+    return jsonify(spot_check(store(), run_id, data))
+
+
+@api.get("/api/runs/<run_id>/audits")
+def audits(run_id):
+    return jsonify({"audits": list_audits(store(), run_id)})
 
 
 @api.get("/api/examples/<profile>")

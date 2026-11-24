@@ -15,6 +15,7 @@
 | M5 运行对账 | 核对来源行、采信、隔离、重复与计算条目 | `POST /api/stages/reconcile` | `app/reconcile/ledger.py` | `tests/test_reconcile.py` |
 | M6 批次复核 | 带版本号签发或暂缓，拒绝陈旧复核 | `POST /api/runs/{id}/review` | `app/review/service.py` | `tests/test_review.py` |
 | M7 证据交付 | 仅在签发后输出可校验的复核证据 | `GET /api/runs/{id}/evidence` | `app/evidence/render.py` | `tests/test_evidence.py` |
+| M8 财务抽查 | 按签发规则重核旧批次并登记结论 | `POST /api/runs/{id}/audit`、`GET /api/runs/{id}/audits` | `app/audit/service.py`、`app/domain/rules.py` | `tests/test_audit.py` |
 
 ## 输入陷阱
 
@@ -35,4 +36,4 @@
 
 ## 深度边界
 
-采信层区分编码、重复表头、列数、空值、全角字符、前导零与冲突重复；整理层负责单位和字段边界；计算层执行核心规则；判定层保留原因码；对账层要求来源行等于采信、隔离、重复和忽略之和；复核层使用版本号阻止陈旧签发。
+采信层区分编码、重复表头、列数、空值、全角字符、前导零与冲突重复；整理层负责单位和字段边界；计算层执行核心规则；判定层保留原因码；对账层要求来源行等于采信、隔离、重复和忽略之和；复核层使用版本号阻止陈旧签发。抽查层把规则文本登记在册，重核旧批次时按签发规则逐商品对账：材料不齐记待补且凭据照常可取，来源对不上即报来源不符，毛利有差异判复核失败，同样的材料重试命中同一复核记录。

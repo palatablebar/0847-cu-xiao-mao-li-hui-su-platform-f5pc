@@ -7,4 +7,4 @@ def test_home_renders(client):
 def test_health_and_catalog(client):
     assert client.get("/healthz").status_code == 200
     catalog = client.get("/api/catalog").get_json()
-    assert len(catalog["stages"]) == 7
+    assert len(catalog["stages"]) == 8

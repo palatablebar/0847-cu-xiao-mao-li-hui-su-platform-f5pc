@@ -65,6 +65,33 @@
     renderLedger(data);
     window.renderChart($('chart'), data.chart && data.chart.length ? (state.kind || 'bars') : 'bars', data.chart || []);
   }
+  function renderAudits(items) {
+    $('audit-count').textContent = items.length + ' 条';
+    $('audit-list').innerHTML = items.length ? items.map(function (item) {
+      return '<li><span>' + esc((item.created_at || '').slice(0, 19).replace('T', ' ')) + '</span>' +
+        '<span>' + esc(item.conclusion_label) + '</span><code>' + esc(item.reason) + '</code></li>';
+    }).join('') : '<li class="empty">暂无抽查记录</li>';
+  }
+  async function loadAudits() {
+    if (!state.run) { renderAudits([]); return; }
+    try {
+      var data = await request('/api/runs/' + state.run.run_id + '/audits');
+      renderAudits(data.audits || []);
+    } catch (error) { setNotice(error.message); }
+  }
+  async function spotCheck() {
+    if (!state.run) return;
+    try {
+      setNotice('');
+      $('audit').disabled = true;
+      var body = {};
+      if ($('audit-source').value) body.source_profile = $('audit-source').value;
+      var record = await request('/api/runs/' + state.run.run_id + '/audit', {method: 'POST', body: JSON.stringify(body)});
+      setNotice('抽查结论：' + record.conclusion_label + (record.evidence_available ? '，凭据照常可取' : ''));
+      await loadAudits();
+    } catch (error) { setNotice(error.message); }
+    finally { $('audit').disabled = !state.approved; }
+  }
   function stageButtons(stages) {
     $('stage-nav').innerHTML = stages.map(function (stage, index) {
       return '<button type="button" data-stage="' + stage.id + '" aria-pressed="' + (index === 0 ? 'true' : 'false') + '">' + esc(stage.name) + '</button>';
@@ -98,7 +125,9 @@
       $('sign').disabled = run.summary.REJECT > 0 || state.approved;
       $('hold').disabled = state.approved;
       $('download').hidden = !state.approved;
+      $('audit').disabled = !state.approved;
       if (state.approved) $('download').href = '/api/runs/' + run.run_id + '/evidence';
+      await loadAudits();
     } catch (error) { setNotice(error.message); }
     finally { $('run').disabled = false; }
   }
@@ -116,7 +145,9 @@
       $('sign').disabled = true;
       $('hold').disabled = true;
       $('download').hidden = !state.approved;
+      $('audit').disabled = !state.approved;
       if (state.approved) $('download').href = '/api/runs/' + run.run_id + '/evidence';
+      await loadAudits();
     } catch (error) { setNotice(error.message); }
   }
   async function boot() {
@@ -132,9 +163,12 @@
     $('run').addEventListener('click', runBatch);
     $('sign').addEventListener('click', function () { review('APPROVED'); });
     $('hold').addEventListener('click', function () { review('HELD'); });
+    $('audit').addEventListener('click', spotCheck);
+    renderAudits([]);
     $('profile').addEventListener('change', function () {
       state.run = null; state.approved = false;
       $('sign').disabled = true; $('hold').disabled = true; $('download').hidden = true;
+      $('audit').disabled = true; renderAudits([]);
       $('run-status').textContent = '未执行批次'; $('revision').textContent = 'rev 0';
       loadStage('intake');
     });

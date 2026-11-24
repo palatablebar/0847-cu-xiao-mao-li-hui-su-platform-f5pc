@@ -2,8 +2,8 @@ from app.catalog import SPEC
 from app.service import pipeline
 
 
-def test_catalog_has_seven_stages():
-    assert len(SPEC["stages"]) == 7
+def test_catalog_has_eight_stages():
+    assert len(SPEC["stages"]) == 8
 
 
 def test_columns_include_key():

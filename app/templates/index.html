@@ -39,6 +39,21 @@
         </div>
       </div>
     </article>
+    <article class="panel" id="panel-audit">
+      <div class="panel-head"><h2>财务抽查</h2><span class="hint" id="audit-count">--</span></div>
+      <div class="review">
+        <label for="audit-source">原表来源</label>
+        <select id="audit-source">
+          <option value="">签发来源（默认）</option>
+          <option value="clean">clean 样例</option>
+          <option value="dirty">dirty 样例</option>
+        </select>
+        <div class="review-actions">
+          <button id="audit" type="button" disabled>抽查复核</button>
+        </div>
+      </div>
+      <ul class="issues" id="audit-list"></ul>
+    </article>
   </section>
 </main>
 {% endblock %}

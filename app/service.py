@@ -64,6 +64,7 @@ def pipeline(profile="dirty", path=None, upto="证据交付"):
     payload = {
         "project": SPEC["code"] + " " + SPEC["name"],
         "rule": SPEC["rule_short"],
+        "rule_text": SPEC["rule"],
         "profile": profile,
         "source": source,
         "counts": intake["counts"],
@@ -73,6 +74,7 @@ def pipeline(profile="dirty", path=None, upto="证据交付"):
         "chart": chart,
         "summary": summary,
         "ledger": ledger,
+        "margin_book": {str(item.get(SPEC["key"], "")): item.get("margin") for item in results},
         "stages": [{"id": "intake", "name": SPEC["stages"][0]},
                    {"id": "prepare", "name": SPEC["stages"][1]},
                    {"id": "calculate", "name": SPEC["stages"][2]},

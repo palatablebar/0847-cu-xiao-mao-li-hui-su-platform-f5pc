@@ -29,7 +29,43 @@ class Store:
               payload TEXT NOT NULL,
               comment TEXT NOT NULL DEFAULT ''
             );
+            CREATE TABLE IF NOT EXISTS audits(
+              id TEXT PRIMARY KEY,
+              audit_key TEXT UNIQUE NOT NULL,
+              run_id TEXT NOT NULL,
+              created_at TEXT NOT NULL,
+              conclusion TEXT NOT NULL,
+              reason TEXT NOT NULL,
+              detail TEXT NOT NULL
+            );
             ''')
+
+    def find_audit(self, audit_key):
+        with self.connect() as db:
+            row = db.execute("SELECT * FROM audits WHERE audit_key=?", (audit_key,)).fetchone()
+        return dict(row) if row else None
+
+    def create_audit(self, audit_key, run_id, conclusion, reason, detail):
+        existing = self.find_audit(audit_key)
+        if existing:
+            return existing
+        audit_id = uuid.uuid4().hex[:12]
+        with self.connect() as db:
+            db.execute("INSERT INTO audits(id,audit_key,run_id,created_at,conclusion,reason,detail) VALUES(?,?,?,?,?,?,?)",
+                       (audit_id, audit_key, run_id, datetime.now(timezone.utc).isoformat(), conclusion, reason,
+                        json.dumps(detail, ensure_ascii=False)))
+        return self.get_audit(audit_id)
+
+    def get_audit(self, audit_id):
+        with self.connect() as db:
+            row = db.execute("SELECT * FROM audits WHERE id=?", (audit_id,)).fetchone()
+        return dict(row) if row else None
+
+    def audits_for(self, run_id):
+        with self.connect() as db:
+            rows = db.execute("SELECT * FROM audits WHERE run_id=? ORDER BY created_at DESC, rowid DESC",
+                              (run_id,)).fetchall()
+        return [dict(row) for row in rows]
 
     def find_by_request(self, request_key):
         with self.connect() as db:

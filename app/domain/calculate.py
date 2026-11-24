@@ -1,15 +1,13 @@
-from datetime import date, timedelta
 from app.catalog import SPEC
 from app.domain.helpers import *  # noqa: F401,F403
+from app.domain.rules import current_rule, resolve
 
 
 def calculate_rows(items):
+    calculator = resolve(SPEC["rule"]) or current_rule
     out = []
-    rows = items
     for item in items:
-        revenue = item["sell_price_cents"] * item["line_qty"] - item["coupon_cents"]
-        cost = item["unit_cost_cents"] * item["line_qty"] - item["supplier_fund_cents"]
-        margin = revenue - cost
+        revenue, cost, margin = calculator(item)
         item["net_revenue"] = revenue
         item["net_cost"] = cost
         item["margin"] = margin

@@ -12,11 +12,13 @@ def render(run):
         "run_id": run["run_id"],
         "project": run["project"],
         "rule": run["rule"],
+        "rule_text": run.get("rule_text"),
         "profile": run["profile"],
         "source": run["source"],
         "counts": run["counts"],
         "ledger": run["ledger"],
         "summary": run["summary"],
+        "margin_book": run.get("margin_book"),
         "review": {"status": run["status"], "revision": run["revision"], "comment": run["comment"]},
     }
     artifact["artifact_sha256"] = stable_digest(artifact)

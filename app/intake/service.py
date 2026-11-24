@@ -20,7 +20,11 @@ def load(profile: str, path: str | None = None):
     sample = _path(profile, path)
     if not sample.is_file():
         raise DomainIssue("SAMPLE_UNKNOWN")
-    raw = sample.read_bytes()
+    return load_bytes(profile, sample.read_bytes(), sample)
+
+
+def load_bytes(profile: str, raw: bytes, source="inline.csv"):
+    sample = Path(source)
     if len(raw) > MAX_FILE:
         raise DomainIssue("FILE_TOO_LARGE", 413)
     parsed = read_records(raw, SPEC["columns"], MAX_ROWS)
